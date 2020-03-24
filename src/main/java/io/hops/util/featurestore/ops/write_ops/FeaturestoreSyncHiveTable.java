@@ -10,7 +10,6 @@ import io.hops.util.featurestore.dtos.app.FeaturestoreMetadataDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupType;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.StatisticsDTO;
 import io.hops.util.featurestore.ops.FeaturestoreOp;
 
 import javax.xml.bind.JAXBException;
@@ -79,12 +78,6 @@ public class FeaturestoreSyncHiveTable extends FeaturestoreOp {
     featuregroupDTO.setVersion(version);
     featuregroupDTO.setDescription(description);
     featuregroupDTO.setJobs(jobsDTOs);
-    if(statisticsDTO != null){
-      featuregroupDTO.setClusterAnalysis(statisticsDTO.getClusterAnalysisDTO());
-      featuregroupDTO.setDescriptiveStatistics(statisticsDTO.getDescriptiveStatsDTO());
-      featuregroupDTO.setFeaturesHistogram(statisticsDTO.getFeatureDistributionsDTO());
-      featuregroupDTO.setFeatureCorrelationMatrix(statisticsDTO.getFeatureCorrelationMatrixDTO());
-    }
     featuregroupDTO.setFeaturegroupType(FeaturegroupType.CACHED_FEATURE_GROUP);
     return featuregroupDTO;
   }
@@ -111,11 +104,6 @@ public class FeaturestoreSyncHiveTable extends FeaturestoreOp {
   
   public FeaturestoreSyncHiveTable setDescription(String description) {
     this.description = description;
-    return this;
-  }
-  
-  public FeaturestoreSyncHiveTable setStatisticsDTO(StatisticsDTO statisticsDTO) {
-    this.statisticsDTO = statisticsDTO;
     return this;
   }
 }

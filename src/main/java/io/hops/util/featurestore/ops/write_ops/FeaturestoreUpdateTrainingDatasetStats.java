@@ -17,10 +17,8 @@ import io.hops.util.exceptions.TrainingDatasetFormatNotSupportedError;
 import io.hops.util.featurestore.FeaturestoreHelper;
 import io.hops.util.featurestore.dtos.app.FeaturestoreMetadataDTO;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.StatisticsDTO;
 import io.hops.util.featurestore.dtos.trainingdataset.TrainingDatasetDTO;
 import io.hops.util.featurestore.ops.FeaturestoreOp;
-import io.hops.util.featurestore.ops.read_ops.FeaturestoreReadTrainingDataset;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
 import org.apache.spark.sql.SparkSession;
@@ -74,27 +72,20 @@ public class FeaturestoreUpdateTrainingDatasetStats extends FeaturestoreOp {
     TrainingDatasetDoesNotExistError, TrainingDatasetFormatNotSupportedError, JWTNotFoundException, HiveNotEnabled,
     StorageConnectorDoesNotExistError, OnlineFeaturestoreUserNotFound, OnlineFeaturestorePasswordNotFound,
     OnlineFeaturestoreNotEnabled, FeaturegroupDoesNotExistError {
-    Dataset<Row> sparkDf = new FeaturestoreReadTrainingDataset(name).setSpark(getSpark())
-      .setFeaturestore(featurestore).setVersion(version).read();
-    StatisticsDTO statisticsDTO = FeaturestoreHelper.computeDataFrameStats(name, getSpark(), sparkDf,
-      featurestore, version, descriptiveStats, featureCorr, featureHistograms, clusterAnalysis,
-      statColumns, numBins, numClusters, corrMethod);
     FeaturestoreMetadataDTO featurestoreMetadataDTO =
         Hops.getFeaturestoreMetadata().setFeaturestore(featurestore).read();
     TrainingDatasetDTO trainingDatasetDTO = FeaturestoreHelper.findTrainingDataset(
         featurestoreMetadataDTO.getTrainingDatasets(), name, version);
-    FeaturestoreRestClient.updateTrainingDatasetStatsRest(groupInputParamsIntoDTO(trainingDatasetDTO, statisticsDTO));
+    FeaturestoreRestClient.updateTrainingDatasetStatsRest(groupInputParamsIntoDTO(trainingDatasetDTO));
   }
   
   /**
    * Group input parameters into a DTO representation
    *
    * @param trainingDatasetDTO dto to populate
-   * @param statisticsDTO statistics computed based on the dataframe
    * @return populated training dataset DTO
    */
-  private TrainingDatasetDTO groupInputParamsIntoDTO(TrainingDatasetDTO trainingDatasetDTO,
-    StatisticsDTO statisticsDTO) {
+  private TrainingDatasetDTO groupInputParamsIntoDTO(TrainingDatasetDTO trainingDatasetDTO) {
     if(FeaturestoreHelper.jobNameGetOrDefault(null) != null){
       jobs.add(FeaturestoreHelper.jobNameGetOrDefault(null));
     }
@@ -103,10 +94,6 @@ public class FeaturestoreUpdateTrainingDatasetStats extends FeaturestoreOp {
       featurestoreJobDTO.setJobName(jobName);
       return featurestoreJobDTO;
     }).collect(Collectors.toList());
-    trainingDatasetDTO.setDescriptiveStatistics(statisticsDTO.getDescriptiveStatsDTO());
-    trainingDatasetDTO.setFeatureCorrelationMatrix(statisticsDTO.getFeatureCorrelationMatrixDTO());
-    trainingDatasetDTO.setFeaturesHistogram(statisticsDTO.getFeatureDistributionsDTO());
-    trainingDatasetDTO.setClusterAnalysis(statisticsDTO.getClusterAnalysisDTO());
     trainingDatasetDTO.setJobs(jobsDTOs);
     return trainingDatasetDTO;
   }

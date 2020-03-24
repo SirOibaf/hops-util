@@ -23,7 +23,6 @@ import io.hops.util.featurestore.dtos.featuregroup.CachedFeaturegroupDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupType;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.StatisticsDTO;
 import io.hops.util.featurestore.ops.FeaturestoreOp;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.spark.sql.Dataset;
@@ -135,33 +134,7 @@ public class FeaturestoreInsertIntoFeaturegroup extends FeaturestoreOp {
     featuregroupDTO.setJobs(jobsDTOs);
     return featuregroupDTO;
   }
-  
-  /**
-   * Groups input parameters into a DTO representation
-   *
-   * @param statisticsDTO statistics computed based on the dataframe
-   * @return FeaturegroupDTO
-   */
-  private FeaturegroupDTO groupInputParamsIntoDTO(StatisticsDTO statisticsDTO){
-    if(FeaturestoreHelper.jobNameGetOrDefault(null) != null){
-      jobs.add(FeaturestoreHelper.jobNameGetOrDefault(null));
-    }
-    List<FeaturestoreJobDTO> jobsDTOs = jobs.stream().map(jobName -> {
-      FeaturestoreJobDTO featurestoreJobDTO = new FeaturestoreJobDTO();
-      featurestoreJobDTO.setJobName(jobName);
-      return featurestoreJobDTO;
-    }).collect(Collectors.toList());
-    FeaturegroupDTO featuregroupDTO = new FeaturegroupDTO();
-    featuregroupDTO.setFeaturestoreName(featurestore);
-    featuregroupDTO.setName(name);
-    featuregroupDTO.setVersion(version);
-    featuregroupDTO.setDescriptiveStatistics(statisticsDTO.getDescriptiveStatsDTO());
-    featuregroupDTO.setFeatureCorrelationMatrix(statisticsDTO.getFeatureCorrelationMatrixDTO());
-    featuregroupDTO.setFeaturesHistogram(statisticsDTO.getFeatureDistributionsDTO());
-    featuregroupDTO.setClusterAnalysis(statisticsDTO.getClusterAnalysisDTO());
-    featuregroupDTO.setJobs(jobsDTOs);
-    return featuregroupDTO;
-  }
+
   
   /**
    * Inserts data into a cached feature group
@@ -200,12 +173,8 @@ public class FeaturestoreInsertIntoFeaturegroup extends FeaturestoreOp {
       Map<String, String> hudiWriteArgs = setupHudiArgs();
       FeaturestoreHelper.writeHudiDataset(dataframe, getSpark(), name, featurestore, version,
         hudiWriteArgs, ((CachedFeaturegroupDTO) featuregroupDTO).getHdfsStorePaths().get(0), mode);
-      StatisticsDTO statisticsDTO = FeaturestoreHelper.computeDataFrameStats(name, getSpark(), dataframe,
-        featurestore, version,
-        descriptiveStats, featureCorr, featureHistograms, clusterAnalysis, statColumns, numBins, numClusters,
-        corrMethod);
       new FeaturestoreSyncHiveTable(name).setFeaturestore(featurestore).setDescription(featuregroupDTO.getDescription())
-        .setVersion(featuregroupDTO.getVersion()).setStatisticsDTO(statisticsDTO).setJobs(jobs).write();
+        .setVersion(featuregroupDTO.getVersion()).setJobs(jobs).write();
     } else {
       if(offline) {
         FeaturestoreHelper.insertIntoOfflineFeaturegroup(dataframe, getSpark(), name,
@@ -214,11 +183,8 @@ public class FeaturestoreInsertIntoFeaturegroup extends FeaturestoreOp {
       if (online) {
         FeaturestoreHelper.insertIntoOnlineFeaturegroup(dataframe, name, featurestore, version, mode);
       }
-      StatisticsDTO statisticsDTO = FeaturestoreHelper.computeDataFrameStats(name, getSpark(), dataframe,
-        featurestore, version, descriptiveStats, featureCorr, featureHistograms, clusterAnalysis,
-        statColumns, numBins, numClusters, corrMethod);
       Boolean onDemand = featuregroupDTO.getFeaturegroupType() == FeaturegroupType.ON_DEMAND_FEATURE_GROUP;
-      FeaturestoreRestClient.updateFeaturegroupStatsRest(groupInputParamsIntoDTO(statisticsDTO),
+      FeaturestoreRestClient.updateFeaturegroupStatsRest(groupInputParamsIntoDTO(),
         FeaturestoreHelper.getFeaturegroupDtoTypeStr(featurestoreMetadataDTO.getSettings(), onDemand));
     }
     getSpark().sparkContext().setJobGroup("", "", true);

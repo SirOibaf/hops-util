@@ -20,7 +20,6 @@ import io.hops.util.exceptions.TrainingDatasetFormatNotSupportedError;
 import io.hops.util.featurestore.FeaturestoreHelper;
 import io.hops.util.featurestore.dtos.app.FeaturestoreMetadataDTO;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.StatisticsDTO;
 import io.hops.util.featurestore.dtos.storageconnector.FeaturestoreS3ConnectorDTO;
 import io.hops.util.featurestore.dtos.trainingdataset.TrainingDatasetDTO;
 import io.hops.util.featurestore.dtos.trainingdataset.TrainingDatasetType;
@@ -160,13 +159,8 @@ public class FeaturestoreInsertIntoTrainingDataset extends FeaturestoreOp {
     List<TrainingDatasetDTO> trainingDatasetDTOList = featurestoreMetadata.getTrainingDatasets();
     TrainingDatasetDTO trainingDatasetDTO = FeaturestoreHelper.findTrainingDataset(trainingDatasetDTOList,
       trainingDataset, trainingDatasetVersion);
-    StatisticsDTO statisticsDTO = FeaturestoreHelper.computeDataFrameStats(trainingDataset, sparkSession,
-      sparkDf,
-      featurestore, trainingDatasetVersion,
-      descriptiveStats, featureCorr, featureHistograms, clusterAnalysis, statColumns, numBins, numClusters,
-      corrMethod);
     Response response =
-      FeaturestoreRestClient.updateTrainingDatasetStatsRest(groupInputParamsIntoDTO(trainingDatasetDTO, statisticsDTO));
+      FeaturestoreRestClient.updateTrainingDatasetStatsRest(groupInputParamsIntoDTO(trainingDatasetDTO));
     String jsonStrResponse = response.readEntity(String.class);
     JSONObject jsonObjResponse = new JSONObject(jsonStrResponse);
     TrainingDatasetDTO updatedTrainingDatasetDTO = FeaturestoreHelper.parseTrainingDatasetJson(jsonObjResponse);
@@ -244,11 +238,9 @@ public class FeaturestoreInsertIntoTrainingDataset extends FeaturestoreOp {
    * Groups input parameters into a DTO
    *
    * @param trainingDatasetDTO DTO representation of the training dataset before updating the statistics
-   * @param statisticsDTO the newly computed statistics of the training dataset
    * @return training dataset DTO
    */
-  private TrainingDatasetDTO groupInputParamsIntoDTO(TrainingDatasetDTO trainingDatasetDTO,
-    StatisticsDTO statisticsDTO) {
+  private TrainingDatasetDTO groupInputParamsIntoDTO(TrainingDatasetDTO trainingDatasetDTO) {
     if(FeaturestoreHelper.jobNameGetOrDefault(null) != null){
       jobs.add(FeaturestoreHelper.jobNameGetOrDefault(null));
     }
@@ -257,10 +249,6 @@ public class FeaturestoreInsertIntoTrainingDataset extends FeaturestoreOp {
       featurestoreJobDTO.setJobName(jobName);
       return featurestoreJobDTO;
     }).collect(Collectors.toList());
-    trainingDatasetDTO.setClusterAnalysis(statisticsDTO.getClusterAnalysisDTO());
-    trainingDatasetDTO.setFeaturesHistogram(statisticsDTO.getFeatureDistributionsDTO());
-    trainingDatasetDTO.setDescriptiveStatistics(statisticsDTO.getDescriptiveStatsDTO());
-    trainingDatasetDTO.setFeatureCorrelationMatrix(statisticsDTO.getFeatureCorrelationMatrixDTO());
     trainingDatasetDTO.setJobs(jobsDTOs);
     return trainingDatasetDTO;
   }

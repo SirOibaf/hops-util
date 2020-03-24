@@ -22,10 +22,6 @@ import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import io.hops.util.featurestore.dtos.FeaturestoreEntityDTO;
 import io.hops.util.featurestore.dtos.feature.FeatureDTO;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.cluster_analysis.ClusterAnalysisDTO;
-import io.hops.util.featurestore.dtos.stats.desc_stats.DescriptiveStatsDTO;
-import io.hops.util.featurestore.dtos.stats.feature_correlation.FeatureCorrelationMatrixDTO;
-import io.hops.util.featurestore.dtos.stats.feature_distributions.FeatureDistributionsDTO;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -69,17 +65,13 @@ public class FeaturegroupDTO extends FeaturestoreEntityDTO {
   
   public FeaturegroupDTO(Integer featurestoreId, String featurestoreName, String description, Date created,
     String creator, Integer version,
-    DescriptiveStatsDTO descriptiveStatistics,
-    FeatureCorrelationMatrixDTO featureCorrelationMatrix,
-    FeatureDistributionsDTO featuresHistogram,
-    ClusterAnalysisDTO clusterAnalysis, String name,
+    String name,
     Integer id, List<FeatureDTO> features, String location,
     List<FeaturestoreJobDTO> jobs,
     FeaturegroupType featuregroupType,
     Boolean clusterAnalysisEnabled, Boolean descStatsEnabled, Boolean featCorrEnabled, Boolean featHistEnabled,
     List<String> statColumns, Integer numClusters, Integer numBins, String corrMethod) {
-    super(featurestoreId, featurestoreName, description, created, creator, version, descriptiveStatistics,
-      featureCorrelationMatrix, featuresHistogram, clusterAnalysis, name, id, features, location, jobs);
+    super(featurestoreId, featurestoreName, description, created, creator, version, name, id, features, location, jobs);
     this.featuregroupType = featuregroupType;
     this.clusterAnalysisEnabled = clusterAnalysisEnabled;
     this.descStatsEnabled = descStatsEnabled;

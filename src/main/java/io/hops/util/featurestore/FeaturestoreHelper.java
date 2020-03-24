@@ -2172,19 +2172,6 @@ public class FeaturestoreHelper {
     }
   }
 
-  /**
-   * Returns the feature group type string
-   *
-   * @param onDemand boolean flag whether it is an on-demand feature group or not
-   * @return the feature group type string
-   */
-  public static String getFeaturegroupTypeStr(Boolean onDemand) {
-    if(onDemand) {
-      return FeaturegroupType.ON_DEMAND_FEATURE_GROUP.name();
-    } else {
-      return FeaturegroupType.CACHED_FEATURE_GROUP.name();
-    }
-  }
 
   /**
    * Gets the path to where a hopsfs training dataset is
@@ -2451,6 +2438,4 @@ public class FeaturestoreHelper {
       .option(Constants.SPARK_JDBC_PW, pw)
       .load();
   }
-  
-
 }

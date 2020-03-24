@@ -18,7 +18,6 @@ import io.hops.util.featurestore.dtos.app.FeaturestoreMetadataDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupDTO;
 import io.hops.util.featurestore.dtos.featuregroup.FeaturegroupType;
 import io.hops.util.featurestore.dtos.jobs.FeaturestoreJobDTO;
-import io.hops.util.featurestore.dtos.stats.StatisticsDTO;
 import io.hops.util.featurestore.ops.FeaturestoreOp;
 import org.apache.spark.sql.Dataset;
 import org.apache.spark.sql.Row;
@@ -94,20 +93,16 @@ public class FeaturestoreUpdateFeaturegroupStats extends FeaturestoreOp {
       throw new CannotUpdateStatsOfOnDemandFeaturegroups("The update-statistics operation is not supported for " +
           "on-demand feature groups");
     }
-    StatisticsDTO statisticsDTO = FeaturestoreHelper.computeDataFrameStats(name, getSpark(), dataframe,
-      featurestore, version, descriptiveStats, featureCorr, featureHistograms, clusterAnalysis,
-      statColumns, numBins, numClusters, corrMethod);
-    FeaturestoreRestClient.updateFeaturegroupStatsRest(groupInputParamsIntoDTO(featuregroupDTO, statisticsDTO),
+    FeaturestoreRestClient.updateFeaturegroupStatsRest(groupInputParamsIntoDTO(featuregroupDTO),
       FeaturestoreHelper.getFeaturegroupDtoTypeStr(featurestoreMetadata.getSettings(), false));
   }
   
   /**
    * Groups input parameters into a DTO representation
    *
-   * @param statisticsDTO statistics computed based on the dataframe
    * @return FeaturegroupDTO
    */
-  private FeaturegroupDTO groupInputParamsIntoDTO(FeaturegroupDTO featuregroupDTO, StatisticsDTO statisticsDTO){
+  private FeaturegroupDTO groupInputParamsIntoDTO(FeaturegroupDTO featuregroupDTO){
     if(FeaturestoreHelper.jobNameGetOrDefault(null) != null){
       jobs.add(FeaturestoreHelper.jobNameGetOrDefault(null));
     }
@@ -116,10 +111,6 @@ public class FeaturestoreUpdateFeaturegroupStats extends FeaturestoreOp {
       featurestoreJobDTO.setJobName(jobName);
       return featurestoreJobDTO;
     }).collect(Collectors.toList());
-    featuregroupDTO.setDescriptiveStatistics(statisticsDTO.getDescriptiveStatsDTO());
-    featuregroupDTO.setFeatureCorrelationMatrix(statisticsDTO.getFeatureCorrelationMatrixDTO());
-    featuregroupDTO.setFeaturesHistogram(statisticsDTO.getFeatureDistributionsDTO());
-    featuregroupDTO.setClusterAnalysis(statisticsDTO.getClusterAnalysisDTO());
     featuregroupDTO.setJobs(jobsDTOs);
     featuregroupDTO.setClusterAnalysisEnabled(clusterAnalysis);
     featuregroupDTO.setFeatCorrEnabled(featureCorr);
